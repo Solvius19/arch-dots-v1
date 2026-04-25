@@ -148,8 +148,8 @@ Item {
     Process {
         id: sysPoller
         command: ["bash", "-c", 
-            "cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -n1 || echo '0'; " +
-            "cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -n1 || echo 'Unknown'; " +
+            "upower -i /org/freedesktop/UPower/devices/battery_BAT0 2>/dev/null | awk '/^    percentage/ {gsub(/%/,\"\",$NF); print int($NF)}' || echo '0'; " +
+            "upower -i /org/freedesktop/UPower/devices/battery_BAT0 2>/dev/null | awk '/^    state/ {print $NF}' | sed 's/discharging/Discharging/;s/charging/Charging/;s/fully-charged/Full/' || echo 'Unknown'; " +
             "powerprofilesctl get 2>/dev/null || echo 'balanced'; " +
             "awk '{print int($1/3600)\"h \"int(($1%3600)/60)\"m\"}' /proc/uptime 2>/dev/null || echo '0h 0m'; " +
             "wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | awk '{print int($2*100), ($3==\"[MUTED]\"?\"off\":\"on\")}' || echo '0 on'; " +
@@ -188,7 +188,10 @@ Item {
     }
     Timer {
         interval: 1500; running: true; repeat: true; triggeredOnStart: true;
-        onTriggered: sysPoller.running = true
+        onTriggered: {
+            sysPoller.running = false;
+            sysPoller.running = true;
+        }
     }
 
     property real globalOrbitAngle: 0
@@ -784,7 +787,7 @@ Item {
                             anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: { 
                                 exitAnim.start(); // Trigger graceful UI exit
-                                Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/exit.sh"]); 
+                                Quickshell.execDetached(["sh", "-c", "loginctl terminate-user $USER"]); 
                                 Quickshell.execDetached(["sh", "-c", "echo 'close' > /tmp/qs_widget_state"]); 
                             }
                         }
