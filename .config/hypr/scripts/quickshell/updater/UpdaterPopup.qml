@@ -376,7 +376,7 @@ Item {
                     }
                     
                     Text { 
-                        text: updateBtn.fillLevel > 0 ? "HOLDING..." : "UPDATE"
+                        text: updateBtn.triggered ? "SK - " + window.remoteVersion : (updateBtn.fillLevel > 0 ? "HOLDING..." : "UPDATE")
                         font.family: "JetBrains Mono"
                         font.weight: Font.Black
                         font.pixelSize: window.s(14)
